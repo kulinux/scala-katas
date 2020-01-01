@@ -26,10 +26,15 @@ object Queen {
   def check(q1: Queen, q2: Queen): Boolean = diagonal(q1, q2)
   
   def check(jugada: Jugada): Boolean = {
+
+    if(jugada.jugada.length == 1) return false
+
     val tuples:List[(Queen, Queen)] = for {
       q1 <- jugada.jugada
-      q2 <- jugada.jugada.filter(_ != q1)
+      q2 <- jugada.jugada.filter(_.equals(q1) == false)
     } yield (q1, q2)
+
+    if(tuples.length == 0) return true
 
     tuples.foldLeft(false)((b, qs) => b match {
       case true => true
@@ -37,26 +42,37 @@ object Queen {
       })
   }
 
-  def queensInBoard(): List[Queen] = {
+  def queensInBoard(colocadas: Jugada): List[Jugada] = {
     val res = for {
       x <- (0 to 8).map(refineV[Queen.ChessBoxRefined](_)).map(_.toOption.get)
       y <- (0 to 8).map(refineV[Queen.ChessBoxRefined](_)).map(_.toOption.get)
     } yield Queen(x, y)
-    res.toList
+
+    val resFilter = res.map(q => Jugada(colocadas.jugada ++ List(q))).filter(check(_) == false)
+
+    resFilter.toList
   }
 
   def exhaustivo(): List[Jugada] = {
     for {
-      q1 <- queensInBoard()
-      q2 <- queensInBoard()
-      q3 <- queensInBoard()
-      q4 <- queensInBoard()
-      q5 <- queensInBoard()
-      q6 <- queensInBoard()
-      q7 <- queensInBoard()
-      q8 <- queensInBoard()
-      jugada = Jugada(List(q1, q2, q3, q4, q5, q6, q7, q8)) if(check(jugada) == false)
-    } yield jugada
+      q1 <- queensInBoard(Jugada(List()))
+      q2 <- queensInBoard(q1) 
+      q3 <- queensInBoard(q2)
+      q4 <- queensInBoard(q3) if(check(q4) == false)
+    } yield q4
+    /*
+    for {
+      q1 <- queensInBoard(Jugada(List()))
+      q2 <- queensInBoard(q1)
+      q3 <- queensInBoard(q2)
+      q4 <- queensInBoard(q3)
+      q5 <- queensInBoard(q4)
+      q6 <- queensInBoard(q5)
+      q7 <- queensInBoard(q6)
+      q8 <- queensInBoard(q7) if(check(q8) == false)
+      _ = println(s"check $q8")
+    } yield q8
+    */
   }
 }
 

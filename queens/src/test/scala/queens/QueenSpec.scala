@@ -15,6 +15,7 @@ import org.scalatest.matchers.should.Matchers
 
 class QueenSpec extends AnyFlatSpec with Matchers {
     "Diagonal" should "work diagonal" in {
+        Queen.diagonal(Queen(0, 0), Queen(0, 0)) shouldBe true
         Queen.diagonal(Queen(1, 1), Queen(2, 2)) shouldBe true
         Queen.diagonal(Queen(1, 2), Queen(2, 3))  shouldBe true
         Queen.diagonal(Queen(1, 2), Queen(5, 3))  shouldBe false
@@ -22,6 +23,10 @@ class QueenSpec extends AnyFlatSpec with Matchers {
     }
 
     "Diagonal" should "inform check" in {
+        Queen.check( Jugada(
+            List( Queen(0, 0), Queen(0, 0) )
+        )) shouldBe true
+
         Queen.check( Jugada(
             List( Queen(0, 0), Queen(0, 1), Queen(0, 3), Queen(0, 4) )
         )) shouldBe false
@@ -31,10 +36,18 @@ class QueenSpec extends AnyFlatSpec with Matchers {
         )) shouldBe true
     }
 }
+class GeneradorSpec extends AnyFlatSpec with Matchers {
+    "Generador" should "work" in {
+        val res = Queen.queensInBoard(Jugada(List()))
+        res.foreach(println)
+    }
+}
 
 class QueenAppSpec extends AnyFlatSpec with Matchers {
     "Exhaustivo" should "work" in {
-        println("Encontre " + Queen.exhaustivo())
+        val res = Queen.exhaustivo()
+        println("Generado " + res.length)
+        res.foreach(println)
     }
 }
 
