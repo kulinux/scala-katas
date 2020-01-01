@@ -6,12 +6,6 @@ import eu.timepit.refined.numeric._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 
-/*
-import cats._
-import cats.data._
-import cats.implicits._
-*/
-
 
 case class Queen(x: Queen.ChessBox, y: Queen.ChessBox)
 case class Jugada(jugada: List[Queen])
@@ -23,7 +17,9 @@ object Queen {
   def diagonal(q1: Queen, q2: Queen): Boolean = 
     return Math.abs(q1.x.value - q1.y.value) == Math.abs(q2.x.value - q2.y.value)
 
-  def check(q1: Queen, q2: Queen): Boolean = diagonal(q1, q2)
+  def check(q1: Queen, q2: Queen): Boolean = {
+    diagonal(q1, q2) || q1.x == q2.x || q1.y == q2.y
+  }
   
   def check(jugada: Jugada): Boolean = {
 
@@ -56,13 +52,6 @@ object Queen {
   def exhaustivo(): List[Jugada] = {
     for {
       q1 <- queensInBoard(Jugada(List()))
-      q2 <- queensInBoard(q1) 
-      q3 <- queensInBoard(q2)
-      q4 <- queensInBoard(q3) if(check(q4) == false)
-    } yield q4
-    /*
-    for {
-      q1 <- queensInBoard(Jugada(List()))
       q2 <- queensInBoard(q1)
       q3 <- queensInBoard(q2)
       q4 <- queensInBoard(q3)
@@ -70,9 +59,8 @@ object Queen {
       q6 <- queensInBoard(q5)
       q7 <- queensInBoard(q6)
       q8 <- queensInBoard(q7) if(check(q8) == false)
-      _ = println(s"check $q8")
     } yield q8
-    */
+    
   }
 }
 
