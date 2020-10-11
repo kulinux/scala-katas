@@ -22,13 +22,19 @@ class QueenSpec extends AnyFlatSpec with Matchers {
     }
 
     "Diagonal" should "inform check" in {
-        Queen.check( Jugada( List(
-            Queen(0, 0), Queen(0, 1), Queen(0, 3), Queen(0, 4) )
-        ) ) shouldBe false
+        Queen.check( Jugada(
+            List( Queen(0, 0), Queen(0, 1), Queen(0, 3), Queen(0, 4) )
+        )) shouldBe false
 
-        Queen.check( Jugada( List(
-            Queen(0, 0), Queen(0, 1), Queen(0, 3), Queen(4, 4) )
-        ) ) shouldBe true
+        Queen.check( Jugada(
+            List( Queen(0, 0), Queen(0, 1), Queen(0, 3), Queen(4, 4) )
+        )) shouldBe true
+    }
+}
+
+class QueenAppSpec extends AnyFlatSpec with Matchers {
+    "Exhaustivo" should "work" in {
+        println("Encontre " + Queen.exhaustivo())
     }
 }
 
@@ -41,7 +47,7 @@ class PruebasSpec extends AnyFlatSpec with Matchers {
 
         val q2 = (refineV[Queen.ChessBoxRefined](2), refineV[Queen.ChessBoxRefined](3)).mapN(Queen.apply)
 
-        println(q)
-        println(q2)
+        q.isRight shouldBe true
+        q2.isRight shouldBe true
     }
 }
