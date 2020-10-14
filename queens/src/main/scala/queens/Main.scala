@@ -1,50 +1,87 @@
 package queens
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric._
-
-import eu.timepit.refined._
-import eu.timepit.refined.auto._
+import scala.collection.mutable
 
 
-case class Queen(x: Queen.ChessBox, y: Queen.ChessBox)
+
+case class Queen(x: Int, y: Int)
 case class Jugada(jugada: List[Queen])
 
 object Queen {
-  type ChessBoxRefined = Interval.Closed[0, 8]  
-  type ChessBox = Int Refined ChessBoxRefined
+  val queenPositionInBoard = for {
+    x <- 0 to 8
+    y <- 0 to 8
+  } yield Queen(x, y)
 
-  def diagonal(q1: Queen, q2: Queen): Boolean = 
-    return Math.abs(q1.x.value - q1.y.value) == Math.abs(q2.x.value - q2.y.value)
-
+  var totalTimeCheck = 0L
   def check(q1: Queen, q2: Queen): Boolean = {
-    diagonal(q1, q2) || q1.x == q2.x || q1.y == q2.y
-  }
-  
-  def check(jugada: Jugada): Boolean = {
-
-    if(jugada.jugada.length == 1) return false
-
-    val tuples:List[(Queen, Queen)] = for {
-      q1 <- jugada.jugada
-      q2 <- jugada.jugada.filter(_.equals(q1) == false)
-    } yield (q1, q2)
-
-    if(tuples.length == 0) return true
-
-    tuples.foldLeft(false)((b, qs) => b match {
-      case true => true
-      case false => check(qs._1, qs._2)
-      })
+    val st = System.currentTimeMillis()
+    val res = q1.x == q2.x || q1.y == q2.y ||
+        Math.abs(q1.x - q1.y) == Math.abs(q2.x - q2.y)
+    val et = System.currentTimeMillis()
+    totalTimeCheck = totalTimeCheck + (et - st)
+    res
   }
 
-  def queensInBoard(colocadas: Jugada): List[Jugada] = {
-    val res = for {
-      x <- (0 to 8).map(refineV[Queen.ChessBoxRefined](_)).map(_.toOption.get)
-      y <- (0 to 8).map(refineV[Queen.ChessBoxRefined](_)).map(_.toOption.get)
+  val allCheck = calculateAllCheck()
+
+  def checkCache(q1: Queen, q2: Queen) = {
+    allCheck.get((q1, q2)).getOrElse(false)
+  }
+
+
+  def calculateAllCheck() : mutable.Map[Tuple2[Queen, Queen], Boolean] = {
+    var totalTimeCache = 0L
+    val st = System.currentTimeMillis()
+    val all: mutable.Map[Tuple2[Queen, Queen], Boolean]  = new mutable.HashMap()
+    val queenPositionInBoardLocal = for {
+      x <- 0 to 8
+      y <- 0 to 8
     } yield Queen(x, y)
 
-    val resFilter = res.map(q => Jugada(colocadas.jugada ++ List(q))).filter(check(_) == false)
+    val allPairs = for {
+      q1 <- queenPositionInBoardLocal
+      q2 <- queenPositionInBoardLocal
+    } yield (q1, q2)
+
+    for(pair <- allPairs) {
+      all.put(pair, check(pair._1, pair._2))
+    }
+    val et = System.currentTimeMillis()
+    totalTimeCache = totalTimeCache + (et - st)
+    println("Time Cache " + totalTimeCache)
+    all
+  }
+
+  
+  var totalTimeLoop = 0L
+  def check(jugada: Jugada): Boolean = {
+    if(jugada.jugada.length == 1) return false
+
+    val st = System.currentTimeMillis()
+    val withIndex = jugada.jugada.zipWithIndex
+    for(q1 <- withIndex) {
+      for(q2 <- withIndex) {
+        if(q1._2 != q2._2 && checkCache(q1._1, q2._1)) {
+          val et = System.currentTimeMillis()
+          totalTimeLoop = totalTimeLoop + (et - st)
+          return true
+        }
+      }
+    }
+    val et = System.currentTimeMillis()
+    totalTimeLoop = totalTimeLoop + (et - st)
+    return false
+  }
+
+
+  def queensInBoard(colocadas: Jugada): List[Jugada] = {
+    val x = colocadas.jugada.map(_.x).distinct
+    val y = colocadas.jugada.map(_.y).distinct
+    val diagonal = colocadas.jugada.map(d => Math.abs(d.x - d.y)).distinct
+    val resFilter = queenPositionInBoard
+      .filter(q => x.contains(q.x) == false && y.contains(q.y) == false && diagonal.contains(Math.abs(q.x - q.y)) == false )
+      .map(q => Jugada(colocadas.jugada ++ List(q)))
 
     resFilter.toList
   }
@@ -55,11 +92,21 @@ object Queen {
       q2 <- queensInBoard(q1)
       q3 <- queensInBoard(q2)
       q4 <- queensInBoard(q3)
+      q8 <- queensInBoard(q4) if(check(q8) == false)
+    } yield q8
+
+    /*
+    for {
+      q1 <- queensInBoard(Jugada(List()))
+      q2 <- queensInBoard(q1)
+      q3 <- queensInBoard(q2)
+      q4 <- queensInBoard(q3)
       q5 <- queensInBoard(q4)
       q6 <- queensInBoard(q5)
       q7 <- queensInBoard(q6)
       q8 <- queensInBoard(q7) if(check(q8) == false)
     } yield q8
+    */
     
   }
 }
